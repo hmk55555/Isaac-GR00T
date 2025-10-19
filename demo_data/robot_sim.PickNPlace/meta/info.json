@@ -11,8 +11,8 @@
     "splits": {
         "train": "0:100"
     },
-    "data_path": "data/chunk-{episode_chunk:03d}/episode_{episode_index:06d}.parquet",
-    "video_path": "videos/chunk-{episode_chunk:03d}/{video_key}/episode_{episode_index:06d}.mp4",
+   "data_path": "data/chunk-{episode_index:03d}/episode_{episode_index:06d}.parquet",
+    "video_path": "videos/chunk-{episode_index:03d}/{video_key}/episode_{episode_index:06d}.mp4",
     "features": {
         "observation.images.egoview": {
             "dtype": "video",

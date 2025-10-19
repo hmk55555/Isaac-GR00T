@@ -384,7 +384,9 @@ class LeRobotSingleDataset(Dataset):
                         state_action_meta.start,
                         state_action_meta.end,
                     )
+                    print(f"{indices=}")
                     stat = np.array(le_statistics[le_modality][stat_name])
+                    print(f"{stat_name=}, {stat[indices].tolist()=}")
                     dataset_statistics[our_modality][subkey][stat_name] = stat[indices].tolist()
 
         # 3. Full dataset metadata

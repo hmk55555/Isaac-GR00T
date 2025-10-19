@@ -38,16 +38,16 @@ class So101BimanualDataConfig(BaseDataConfig):
         "video.top_depth",
     ]
     state_keys = [
-        "state.left_arm",
-        "state.gripper1",
-        "state.right_arm",
-        "state.gripper2",
+        "state.left_arm",      # indices 0-4 (5 joints)
+        "state.gripper1",      # index 5 (1 gripper)
+        "state.right_arm",    # indices 6-10 (5 joints)
+        "state.gripper2",      # index 11 (1 gripper)
     ]
     action_keys = [
-        "action.left_arm",
-        "action.gripper1",
-        "action.right_arm",
-        "action.gripper2",
+        "action.left_arm",     # indices 0-4 (5 joints)
+        "action.gripper1",     # index 5 (1 gripper)
+        "action.right_arm",    # indices 6-10 (5 joints)
+        "action.gripper2",      # index 11 (1 gripper)
     ]
     language_keys = ["annotation.human.task_description"]
     observation_indices = [0]
