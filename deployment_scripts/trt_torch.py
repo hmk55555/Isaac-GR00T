@@ -17,7 +17,7 @@ import atexit
 import ctypes
 import os
 
-import tensorrt as trt
+import tensor as trt
 import torch
 
 
