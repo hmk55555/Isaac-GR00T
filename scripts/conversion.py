@@ -82,22 +82,55 @@ except ImportError:
         """Load tasks from meta/tasks.jsonl or meta/tasks.parquet."""
         import pandas as pd
         tasks_jsonl = Path(root) / "meta/tasks.jsonl"
-        tasks_parquet = Path(root) / "meta/tasks"
+        tasks_parquet_file = Path(root) / "meta/tasks.parquet"
+        tasks_parquet_dir = Path(root) / "meta/tasks"
         
         if tasks_jsonl.exists():
             import jsonlines
             with jsonlines.open(tasks_jsonl) as f:
                 tasks_list = list(f)
             return pd.DataFrame(tasks_list)
-        elif tasks_parquet.exists():
+        elif tasks_parquet_file.exists():
             import pyarrow.parquet as pq
-            pq_files = sorted(tasks_parquet.glob("*.parquet"))
+            table = pq.read_table(tasks_parquet_file)
+            return pd.DataFrame(table.to_pylist())
+        elif tasks_parquet_dir.exists():
+            import pyarrow.parquet as pq
+            pq_files = sorted(tasks_parquet_dir.glob("*.parquet"))
             tasks = []
             for pq_file in pq_files:
                 table = pq.read_table(pq_file)
                 tasks.extend(table.to_pylist())
             return pd.DataFrame(tasks)
         return pd.DataFrame()
+
+# Wrap load_tasks to handle __index_level_0__ column
+_original_load_tasks = load_tasks
+def load_tasks(root):
+    """Wrapper to fix __index_level_0__ column name."""
+    tasks = _original_load_tasks(root)
+    
+    # Check if the index contains string values (not just integer positions)
+    # This happens when __index_level_0__ is saved as the index
+    if not tasks.empty and isinstance(tasks.index[0], str):
+        # Reset index to turn it into a column
+        tasks = tasks.reset_index()
+        # Rename the index column to 'task'
+        if 'index' in tasks.columns:
+            tasks = tasks.rename(columns={'index': 'task'})
+    elif tasks.index.name is not None and tasks.index.name != '':
+        # Also handle if the index has an explicit name
+        tasks = tasks.reset_index()
+        if tasks.index.name in tasks.columns:
+            tasks = tasks.rename(columns={tasks.index.name: 'task'})
+        elif 'index' in tasks.columns:
+            tasks = tasks.rename(columns={'index': 'task'})
+    
+    # Also handle if __index_level_0__ is a regular column
+    if "__index_level_0__" in tasks.columns:
+        tasks = tasks.rename(columns={"__index_level_0__": "task"})
+    
+    return tasks
 
 try:
     from lerobot.utils.constants import HF_LEROBOT_HOME
@@ -167,6 +200,10 @@ def convert_tasks(root: Path, new_root: Path) -> None:
     logging.info("Converting tasks parquet to tasks.json")
     tasks = load_tasks(root)
     
+    # DEBUG: Print what we loaded
+    logging.info(f"DEBUG: Loaded tasks DataFrame with columns: {list(tasks.columns)}")
+    logging.info(f"DEBUG: Tasks content:\n{tasks}")
+    
     # Check if tasks is empty or doesn't have the expected structure
     if tasks.empty:
         logging.warning("No tasks found, creating empty tasks.json file")
@@ -181,11 +218,26 @@ def convert_tasks(root: Path, new_root: Path) -> None:
     if "task_index" in tasks.columns:
         tasks = tasks.sort_values("task_index")
     
+    # Reorder columns to have task_index first, then task, then others
+    cols = tasks.columns.tolist()
+    if "task_index" in cols and "task" in cols:
+        # Remove task_index and task from current position
+        cols.remove("task_index")
+        cols.remove("task")
+        # Add them at the beginning in the correct order
+        cols = ["task_index", "task"] + cols
+        tasks = tasks[cols]
+    
     out_path = new_root / "meta" / "tasks.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Use pandas to_json with orient='records' and lines=True
     tasks.to_json(out_path, orient='records', lines=True)
+    
+    # DEBUG: Verify what was written
+    with open(out_path, 'r') as f:
+        written_content = f.read()
+    logging.info(f"DEBUG: Written to tasks.json: {written_content}")
 
 
 def convert_info(
@@ -266,7 +318,7 @@ def convert_data(root: Path, new_root: Path, episode_records: list[dict[str, Any
 
             dest_chunk = episode_index // DEFAULT_CHUNK_SIZE
             dest_path = new_root / LEGACY_DATA_PATH_TEMPLATE.format(
-                chunk_index=dest_chunk,
+                episode_chunk=dest_chunk,
                 episode_index=episode_index,
             )
             dest_path.parent.mkdir(parents=True, exist_ok=True)
@@ -448,7 +500,7 @@ def convert_videos(root: Path, new_root: Path, episode_records: list[dict[str, A
 
                 dest_chunk = episode_index // DEFAULT_CHUNK_SIZE
                 dest_path = new_root / LEGACY_VIDEO_PATH_TEMPLATE.format(
-                    chunk_index=dest_chunk,
+                    episode_chunk=dest_chunk,
                     video_key=video_key,
                     episode_index=episode_index,
                 )
