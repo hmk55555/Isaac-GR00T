@@ -118,8 +118,8 @@ V30_DATA_PATH_TEMPLATE = "data/chunk-{chunk_index:03d}/file-{file_index:03d}.par
 V30_VIDEO_PATH_TEMPLATE = "videos/{video_key}/chunk-{chunk_index:03d}/file-{file_index:03d}.mp4"
 
 # v2.1 format (target/legacy)
-LEGACY_DATA_PATH_TEMPLATE = "data/chunk-{chunk_index:03d}/episode_{episode_index:06d}.parquet"
-LEGACY_VIDEO_PATH_TEMPLATE = "videos/chunk-{chunk_index:03d}/{video_key}/episode_{episode_index:06d}.mp4"
+LEGACY_DATA_PATH_TEMPLATE = "data/chunk-{episode_chunk:03d}/episode_{episode_index:06d}.parquet"
+LEGACY_VIDEO_PATH_TEMPLATE = "videos/chunk-{episode_chunk:03d}/{video_key}/episode_{episode_index:06d}.mp4"
 MIN_VIDEO_DURATION = 1e-6
 
 def _to_serializable(value: Any) -> Any:
@@ -164,36 +164,28 @@ def load_episode_records(root: Path) -> list[dict[str, Any]]:
 
 
 def convert_tasks(root: Path, new_root: Path) -> None:
-    logging.info("Converting tasks parquet to legacy JSONL")
+    logging.info("Converting tasks parquet to tasks.json")
     tasks = load_tasks(root)
     
     # Check if tasks is empty or doesn't have the expected structure
     if tasks.empty:
-        logging.warning("No tasks found, creating empty tasks file")
-        out_path = new_root / LEGACY_TASKS_PATH
+        logging.warning("No tasks found, creating empty tasks.json file")
+        out_path = new_root / "meta" / "tasks.json"
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        with jsonlines.open(out_path, mode="w") as writer:
-            pass  # Create empty file
+        # Create empty dataframe and write empty JSON lines file
+        empty_df = pd.DataFrame()
+        empty_df.to_json(out_path, orient='records', lines=True)
         return
     
     # If task_index exists, sort by it
     if "task_index" in tasks.columns:
         tasks = tasks.sort_values("task_index")
     
-    out_path = new_root / LEGACY_TASKS_PATH
+    out_path = new_root / "meta" / "tasks.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with jsonlines.open(out_path, mode="w") as writer:
-        for idx, row in tasks.iterrows():
-            # Handle different possible structures
-            if "task_index" in row and "task" in row:
-                writer.write({
-                    "task_index": int(row["task_index"]),
-                    "task": _to_serializable(row["task"]),
-                })
-            else:
-                # If structure is different, write the whole row
-                writer.write(_to_serializable(row.to_dict()))
+    # Use pandas to_json with orient='records' and lines=True
+    tasks.to_json(out_path, orient='records', lines=True)
 
 
 def convert_info(
@@ -514,6 +506,16 @@ def copy_ancillary_directories(root: Path, new_root: Path) -> None:
             shutil.copytree(source, new_root / subdir, dirs_exist_ok=True)
 
 
+def remove_stats_file(root: Path) -> None:
+    """Remove the stats.json file as it will be regenerated."""
+    stats_file = root / "meta" / "stats.json"
+    if stats_file.exists():
+        logging.info("Removing stats.json file as it will be regenerated")
+        stats_file.unlink()
+    else:
+        logging.info("No stats.json file found to remove")
+
+
 def convert_dataset(
     repo_id: str,
     root: str | Path | None = None,
@@ -559,6 +561,9 @@ def convert_dataset(
 
     shutil.move(str(root), str(backup_root))
     shutil.move(str(new_root), str(root))
+    
+    # Remove stats.json file as it will be regenerated
+    remove_stats_file(root)
 
 
 def parse_args() -> argparse.Namespace:
