@@ -24,7 +24,7 @@ python eval_gr00t_so101_new.py \
     --robot.left_arm_port=/dev/ttyACM1 \
     --robot.right_arm_port=/dev/ttyACM0 \
     --robot.id=follower \
-    --robot.cameras="{ right: {type: opencv, index_or_path: 1, width: 640, height: 480, fps: 30}, left: {type: opencv, index_or_path: 2, width: 640, height: 480, fps: 30}, top_depth: {type: opencv, index_or_path: 3, width: 640, height: 480, fps: 30}}" \
+    --robot.cameras="{ right: {type: opencv, index_or_path: 1, width: 640, height: 480, fps: 30}, left: {type: opencv, index_or_path: 2, width: 640, height: 480, fps: 30}, top_rgb: {type: opencv, index_or_path: 3, width: 640, height: 480, fps: 30}}" \
     --policy_host=192.168.0.110 \
     --lang_instruction="pour matcha"
 ```
@@ -80,7 +80,7 @@ class Gr00tBimanualRobotInferenceClient:
     Modality structure (based on modality.json):
     - state: left_arm (5), gripper1 (1), right_arm (5), gripper2 (1) = 12 total
     - action: same as state
-    - video: right, left, top_depth
+    - video: right, left, top_rgb
     """
 
     def __init__(

@@ -28,7 +28,7 @@ The `so101_bimanual__modality.json` file defines the observation and action spac
 ### Video Observations
 - `right`: Right camera view (`observation.images.right`)
 - `left`: Left camera view (`observation.images.left`)
-- `top_depth`: Top depth camera view (`observation.images.top_depth`)
+- `top_rgb`: Top depth camera view (`observation.images.top_rgb`)
 
 ### Annotations
 - `human.task_description`: Task description from `task_index`
@@ -37,7 +37,7 @@ The `so101_bimanual__modality.json` file defines the observation and action spac
 
 The `So101BimanualDataConfig` class in `custom_data_config.py` provides:
 
-- **Video keys**: `video.right`, `video.left`, `video.top_depth`
+- **Video keys**: `video.right`, `video.left`, `video.top_rgb`
 - **State keys**: `state.left_arm`, `state.gripper1`, `state.right_arm`, `state.gripper2`
 - **Action keys**: `action.left_arm`, `action.gripper1`, `action.right_arm`, `action.gripper2`
 - **Language keys**: `annotation.human.task_description`

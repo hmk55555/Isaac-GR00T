@@ -50,8 +50,8 @@
         "left": {
             "original_key": "observation.images.left"
         },
-        "top_depth": {
-            "original_key": "observation.images.top_depth"
+        "top_rgb": {
+            "original_key": "observation.images.top_rgb"
         }
     },
     "annotation": {

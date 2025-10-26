@@ -51,7 +51,7 @@ python examples/SO-101/eval_gr00t_so101_new.py \
     --robot.left_arm_port=/dev/ttyACM1 \
     --robot.right_arm_port=/dev/ttyACM0 \
     --robot.id=follower \
-    --robot.cameras="{ right: {type: opencv, index_or_path: 1, width: 640, height: 480, fps: 30}, left: {type: opencv, index_or_path: 2, width: 640, height: 480, fps: 30}, top_depth: {type: opencv, index_or_path: 3, width: 640, height: 480, fps: 30}}" \
+    --robot.cameras="{ right: {type: opencv, index_or_path: 1, width: 640, height: 480, fps: 30}, left: {type: opencv, index_or_path: 2, width: 640, height: 480, fps: 30}, top_rgb: {type: opencv, index_or_path: 3, width: 640, height: 480, fps: 30}}" \
     --policy_host=192.168.0.110 \
     --policy_port=5555 \
     --action_horizon=12 \
@@ -100,7 +100,7 @@ GR00T Format (via modality.json):
     state.gripper1: [5:6]     (1 gripper)
     state.right_arm: [6:11]   (5 joints)
     state.gripper2: [11:12]   (1 gripper)
-    video.right, video.left, video.top_depth
+    video.right, video.left, video.top_rgb
     ↓
 GR00T Model Inference
     ↓

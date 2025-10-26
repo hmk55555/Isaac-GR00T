@@ -35,7 +35,7 @@ class So101BimanualDataConfig(BaseDataConfig):
     video_keys = [
         "video.right",
         "video.left", 
-        "video.top_depth",
+        "video.top_rgb",
     ]
     state_keys = [
         "state.left_arm",      # indices 0-4 (5 joints)

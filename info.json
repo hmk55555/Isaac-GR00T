@@ -54,7 +54,7 @@
                 12
             ]
         },
-        "observation.images.top_depth": {
+        "observation.images.top_rgb": {
             "dtype": "video",
             "shape": [
                 480,
